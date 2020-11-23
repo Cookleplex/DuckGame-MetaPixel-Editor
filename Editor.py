@@ -534,7 +534,7 @@ class MetaPixelGui:
         except ValueError:
             pass
         g = 0 if g < 0 else 255 if 255 < g else g
-        b = 0 if g < 0 else 255 if 255 < g else g
+        b = 0 if b < 0 else 255 if 255 < b else b
         self.pixel.value.set_colors(g, b)
         values = self.pixel.value.get_values()
         if 0 < len(values):
@@ -580,24 +580,24 @@ class Editor:
     def __init__(self):
         # Image stuff
         self.icon = """iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAABhWlDQ1
- BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9bpUVbHCwoIpihOlkQFXGUKhbBQmkrtOpgcukXNGlIUl
- wcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DvI0KU4yuCUBRTT0VjwnZ3K
- rgf0UvBhBACCMiM7REejED1/F1Dw9f76I8y/3cnyMk5w0GeATiOabpJvEG8cymqXHeJw6zkigTnx
- OP63RB4keuSw6/cS7a7OWZYT2TmicOEwvFDpY6mJV0hXiaOCIrKuV7sw7LnLc4K5Uaa92TvzCYV1
- fSXKc5jDiWkEASAiTUUEYFJqK0qqQYSNF+zMU/ZPuT5JLIVQYjxwKqUCDafvA/+N2tUZiadJKCMa
- D7xbI+RgH/LtCsW9b3sWU1TwDfM3Cltv3VBjD7SXq9rUWOgL5t4OK6rUl7wOUOMPikibpoSz6a3k
- IBeD+jb8oB/bdAz5rTW2sfpw9AhrpavgEODoGxImWvu7w70Nnbv2da/f0AYUpyoBrfN9UAAAAGYk
- tHRABYAFgAWPY/mbsAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCxcIFCWQpv+pAAAAGX
- RFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAdFJREFUeNrt3a1OA0EUhuFdUo9BIi
- AkGILAQ4LFI1YgoIQbQIAA2YpeRAmyDtkQDAnFYggGBAgMQTS9AriBOWKShaXleeXJdNuZN2fzZf
- anZVVVBZpjzhIQQAAIIAAEEAACCAABBOD3aOV+YDAYfKXqVVWVllMHEAACCAAB05+CorSzf3qeHH
- /Z60hHOoAAEEAACJiBFBSxtbqcTkGZaQo6gAAQQAABaJQy9+7oulLNZ2+jlgksnDykJ1amt6D6/f
- 6PLmi73c76PTrAKYgAEEAAGqJV14F2NteS9eHoKVm/fpnU88VHK7Uc5u75NVmP9r6i8cXFhQ5wCg
- IBBICAqU5B0Z7P7dJ6cvz26DFZj/Ze9g4PG5lwmF4aGq8DnIIIAAEE4K+loFzCdBSknWjvaPfguJ
- bUcdnrJOsf91c6AAQQAAIIQI0p6GY8TtbP5heT9W5wpWw4qmePKHo27a/dra0DCCAABBCAhiiLos
- i68hWlnYju5D0rpUTM6nuKdAABBIAAAjAtKSgiSkdRCsplVt87pAMIIAAEEICGyL4ilpt2vDVRBx
- AAAggAAdOVgrbfHq2ODiAABBAAAmaX0n/K6wACQAABIIAAEEAACCAABPwbvgGpc2uukqDTSwAAAA
- BJRU5ErkJggg=="""
+        BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9bpUVbHCwoIpihOlkQFXGUKhbBQmkrtOpgcukXNGlIUl
+        wcBdeCgx+LVQcXZ10dXAVB8APEydFJ0UVK/F9SaBHjwXE/3t173L0DvI0KU4yuCUBRTT0VjwnZ3K
+        rgf0UvBhBACCMiM7REejED1/F1Dw9f76I8y/3cnyMk5w0GeATiOabpJvEG8cymqXHeJw6zkigTnx
+        OP63RB4keuSw6/cS7a7OWZYT2TmicOEwvFDpY6mJV0hXiaOCIrKuV7sw7LnLc4K5Uaa92TvzCYV1
+        fSXKc5jDiWkEASAiTUUEYFJqK0qqQYSNF+zMU/ZPuT5JLIVQYjxwKqUCDafvA/+N2tUZiadJKCMa
+        D7xbI+RgH/LtCsW9b3sWU1TwDfM3Cltv3VBjD7SXq9rUWOgL5t4OK6rUl7wOUOMPikibpoSz6a3k
+        IBeD+jb8oB/bdAz5rTW2sfpw9AhrpavgEODoGxImWvu7w70Nnbv2da/f0AYUpyoBrfN9UAAAAGYk
+        tHRABYAFgAWPY/mbsAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfkCxcIFCWQpv+pAAAAGX
+        RFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAdFJREFUeNrt3a1OA0EUhuFdUo9BIi
+        AkGILAQ4LFI1YgoIQbQIAA2YpeRAmyDtkQDAnFYggGBAgMQTS9AriBOWKShaXleeXJdNuZN2fzZf
+        anZVVVBZpjzhIQQAAIIAAEEAACCAABBOD3aOV+YDAYfKXqVVWVllMHEAACCAAB05+CorSzf3qeHH
+        /Z60hHOoAAEEAACJiBFBSxtbqcTkGZaQo6gAAQQAABaJQy9+7oulLNZ2+jlgksnDykJ1amt6D6/f
+        6PLmi73c76PTrAKYgAEEAAGqJV14F2NteS9eHoKVm/fpnU88VHK7Uc5u75NVmP9r6i8cXFhQ5wCg
+        IBBICAqU5B0Z7P7dJ6cvz26DFZj/Ze9g4PG5lwmF4aGq8DnIIIAAEE4K+loFzCdBSknWjvaPfguJ
+        bUcdnrJOsf91c6AAQQAAIIQI0p6GY8TtbP5heT9W5wpWw4qmePKHo27a/dra0DCCAABBCAhiiLos
+        i68hWlnYju5D0rpUTM6nuKdAABBIAAAjAtKSgiSkdRCsplVt87pAMIIAAEEICGyL4ilpt2vDVRBx
+        AAAggAAdOVgrbfHq2ODiAABBAAAmaX0n/K6wACQAABIIAAEEAACCAABPwbvgGpc2uukqDTSwAAAA
+        BJRU5ErkJggg=="""
         self.image = None
 
         self.meta_pixel_keys = []
@@ -608,7 +608,6 @@ class Editor:
 
         # Gui Stuff
         self.root = tk.Tk()
-        self.icon = tk.PhotoImage(data=self.icon)
         self.frame1 = tk.Frame(self.root, borderwidth=4, relief="groove")
         self.frame1.grid(column=0, row=0, sticky=tk.NSEW)
 
@@ -668,7 +667,7 @@ class Editor:
         self.root.bind_all('<KeyRelease>', self.key_stuff)
 
         self.root.title("DuckGame hat MetaPixel Editor")
-        self.root.iconphoto(False, self.icon)
+        self.root.iconphoto(False, tk.PhotoImage(data=self.icon))
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.resizable(width=False, height=False)
         self.add_open = False
@@ -761,6 +760,7 @@ class Editor:
 
         self.add_open = True
 
+        root.iconphoto(False, tk.PhotoImage(master=root, data=self.icon))
         root.mainloop(1)
         self.add_open = False
 
