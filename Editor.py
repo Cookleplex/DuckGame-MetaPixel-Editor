@@ -428,7 +428,7 @@ class MetaPixel:
         gb = self.value.get_colors()
         r, g, b, a = int(self.type.value[0]), int(gb[0]), int(gb[1]), 255
         g = 0 if g < 0 else 255 if 255 < g else g
-        b = 0 if g < 0 else 255 if 255 < g else g
+        b = 0 if b < 0 else 255 if 255 < b else b
         return r, g, b, a
 
     def get_value(self):
