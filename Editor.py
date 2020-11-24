@@ -6,19 +6,48 @@ from tkinter.messagebox import showinfo, askyesno, askokcancel
 import enum
 
 
-class MetaPixelValueType(enum.Enum):
-    Bool = 0, "Snow2"
-    Int = 1, "cyan"
-    Float = 2, "Lime"
-    IntPair = 3, "DeepSkyBlue"
-    Vec2 = 4, "Tan1"
-    NormalizedVec2 = 5, "Maroon1"
-    Randomized = 6, "SlateBlue"
+class ValueType(enum.Enum):
+    Bool = 0
+    Int = 1
+    Float = 2
+    IntPair = 3
+    Vec2 = 4
+    NormVec2 = 5
+    Randomize = 6
+
+    def create_meta_pixel_value(self, kwargs):
+        if self.value == 0: return Bool()
+        elif self.value == 1: return Int(**kwargs)
+        elif self.value == 2: return Float(**kwargs)
+        elif self.value == 3: return IntPair(**kwargs)
+        elif self.value == 4: return Vec2(**kwargs)
+        elif self.value == 5: return NormalizedVec2(**kwargs)
+        elif self.value == 6: return Randomize()
+        return None
+
+
+class TypeHolder:
+    COLORS = {
+        0: "Snow2",
+        1: "cyan",
+        2: "Lime",
+        3: "DeepSkyBlue",
+        4: "Tan1",
+        5: "Maroon1",
+        6: "SlateBlue"
+    }
+
+    def __init__(self, meta_pixel_value_type: ValueType, **kwargs):
+        self.type = meta_pixel_value_type
+        self.kwargs = kwargs
+
+    def generate(self):
+        return self.type.create_meta_pixel_value(self.kwargs)
 
 
 class MetaPixelValue:
     def __init__(self, value):
-        assert isinstance(value, MetaPixelValueType)
+        assert isinstance(value, ValueType)
         self.type = value
         self.g = 0
         self.b = 0
@@ -49,7 +78,7 @@ class MetaPixelValue:
 
 class Bool(MetaPixelValue):
     def __init__(self):
-        super().__init__(MetaPixelValueType.Bool)
+        super().__init__(ValueType.Bool)
 
     def get_values(self):
         return ()
@@ -60,7 +89,7 @@ class Bool(MetaPixelValue):
 
 class Vec2(MetaPixelValue):
     def __init__(self, vec_range=128.0, value=(128.0, 128.0)):
-        super().__init__(MetaPixelValueType.Vec2)
+        super().__init__(ValueType.Vec2)
         self.midpoint = value
         self.range = vec_range
         self.value_x = self.midpoint[0]
@@ -99,7 +128,7 @@ class Vec2(MetaPixelValue):
 
 class Float(MetaPixelValue):
     def __init__(self, float_range=1.0, value=1.0):
-        super().__init__(MetaPixelValueType.Float)
+        super().__init__(ValueType.Float)
         self.range = float_range
         self.value = value
 
@@ -128,7 +157,7 @@ class Float(MetaPixelValue):
 
 class Int(MetaPixelValue):
     def __init__(self, int_range=255, value=0):
-        super().__init__(MetaPixelValueType.Int)
+        super().__init__(ValueType.Int)
         self.range = int_range
         self.value = value
 
@@ -158,7 +187,7 @@ class Int(MetaPixelValue):
 
 class IntPair(MetaPixelValue):
     def __init__(self, int_range_x=255, int_range_y=255, value_x=0, value_y=0):
-        super().__init__(MetaPixelValueType.IntPair)
+        super().__init__(ValueType.IntPair)
         self.value_x = Int(int_range=int_range_x, value=value_x)
         self.value_y = Int(int_range=int_range_y, value=value_y)
 
@@ -188,7 +217,7 @@ class IntPair(MetaPixelValue):
 
 class NormalizedVec2(MetaPixelValue):
     def __init__(self, vec_range=1.0, value=(0.0, 0.0), allow_negative=True):
-        super().__init__(MetaPixelValueType.NormalizedVec2)
+        super().__init__(ValueType.NormVec2)
         self.offset = (128.0, 128.0) if allow_negative else (0.0, 0.0)
         self.negative = allow_negative
         self.range = vec_range
@@ -237,133 +266,136 @@ class NormalizedVec2(MetaPixelValue):
 
 class Randomize(MetaPixelValue):
     def __init__(self):
-        super().__init__(MetaPixelValueType.Randomized)
+        super().__init__(ValueType.Randomize)
 
     def get_values(self):
         return ()
 
+    def calc_colors(self):
+        pass
+
     def set_colors(self, g: int, b: int):
         self.g = g
-        self.b = g
+        self.b = b
 
 
 class MetaPixelType(enum.Enum):
     # Misc
-    HatOffset = 1, Vec2(vec_range=16), \
+    HatOffset = 1, TypeHolder(ValueType.Vec2, vec_range=16), \
     "Hat offset position in pixels", 0
 
-    UseDuckColor = 2, Bool(), \
+    UseDuckColor = 2, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, White (255, 255, 255) and Grey(157, 157, 157) will be recolored to duck colors.", 0
 
     # Capes
-    CapeOffset = 10, Vec2(vec_range=16), \
+    CapeOffset = 10, TypeHolder(ValueType.Vec2, vec_range=16), \
     "Cape offset position in pixels", 1
 
-    CapeForeground = 11, Bool(), \
+    CapeForeground = 11, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the cape will be drawn over the duck.", 1
 
-    CapeSwayModifier = 12, NormalizedVec2(value=(0.3, 1.0)), \
+    CapeSwayModifier = 12, TypeHolder(ValueType.NormVec2, value=(0.3, 1.0)), \
     "Affects cape length, and left to right sway.", 1
 
-    CapeWiggleModifier = 13, NormalizedVec2(value=(1.0, 1.0)), \
+    CapeWiggleModifier = 13, TypeHolder(ValueType.NormVec2, value=(1.0, 1.0)), \
     "Affects how much the cape wiggles in the wind.", 1
 
-    CapeTaperStart = 14, Float(value=0.5), \
+    CapeTaperStart = 14, TypeHolder(ValueType.Float, value=0.5), \
     "Affects how narrow the cape/trail is at the top/beginning.", 1
 
-    CapeTaperEnd = 15, Float(), \
+    CapeTaperEnd = 15, TypeHolder(ValueType.Float), \
     "Affects how narrow the cape/trail is at the bottom/end.", 1
 
-    CapeAlphaStart = 16, Float(), \
+    CapeAlphaStart = 16, TypeHolder(ValueType.Float), \
     "Affects how transparent the cape/trail is at the top/beginning.", 1
 
-    CapeAlphaEnd = 17, Float(), \
+    CapeAlphaEnd = 17, TypeHolder(ValueType.Float), \
     "Affects how transparent the cape/trail is at the bottom/end.", 1
 
-    CapeIsTrail = 20, Bool(), \
+    CapeIsTrail = 20, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the cape will be a trail instead of a cape (think of the rainbow trail left by the " \
     "TV object).", 1
 
     # Particles
-    ParticleEmitterOffset = 30, Vec2(vec_range=16.0), \
+    ParticleEmitterOffset = 30, TypeHolder(ValueType.Vec2, vec_range=16.0), \
     "The offset in pixels from the center of the hat where particles will be emitted.", 2
 
-    ParticleDefaultBehavior = 31, Int(int_range=4, value=0), \
+    ParticleDefaultBehavior = 31, TypeHolder(ValueType.Int, int_range=4, value=0), \
     "B defines a particle behavior from a list of presets: 0 = No Behavior, 1 = Spit, 2 = Burst," \
     " 3 = Halo, 4 = Exclamation", 2
 
-    ParticleEmitShape = 32, IntPair(int_range_x=2, int_range_y=2), \
+    ParticleEmitShape = 32, TypeHolder(ValueType.IntPair, int_range_x=2, int_range_y=2), \
     "G: 0 = Point, 1 = Circle, 2 = Box   B: 0 = Emit Around Shape Border Randomly, 1 = Fill Shape Randomly, " \
     "2 = Emit Around Shape Border Uniformly", 2
 
-    ParticleEmitShapeSize = 33, Vec2(vec_range=24.0, value=(24.0, 24.0)), \
+    ParticleEmitShapeSize = 33, TypeHolder(ValueType.Vec2, vec_range=24.0, value=(24.0, 24.0)), \
     "X and Y size of the particle emitter (in pixels). Should be IntPair with usage but is this type in docs.", 2
 
-    ParticleCount = 34, Int(int_range=8, value=4), \
+    ParticleCount = 34, TypeHolder(ValueType.Int, int_range=8, value=4), \
     "The number of particles to emit.", 2
 
-    ParticleLifespan = 35, Float(float_range=2.0), \
+    ParticleLifespan = 35, TypeHolder(ValueType.Float, float_range=2.0), \
     "Life span of the particle, in seconds (0 to 2 seconds)", 2
 
-    ParticleVelocity = 36, NormalizedVec2(vec_range=2.0), \
+    ParticleVelocity = 36, TypeHolder(ValueType.NormVec2, vec_range=2.0), \
     "Initial velocity of the particle.", 2
 
-    ParticleGravity = 37, NormalizedVec2(vec_range=2.0), \
+    ParticleGravity = 37, TypeHolder(ValueType.NormVec2, vec_range=2.0), \
     "Gravity applied to the particle.", 2
 
-    ParticleFriction = 38, NormalizedVec2(vec_range=2.0, allow_negative=False, value=(1.0, 1.0)), \
+    ParticleFriction = 38, TypeHolder(ValueType.NormVec2, vec_range=2.0, allow_negative=False, value=(1.0, 1.0)), \
     "Friction applied to the particle (The value it's velocity is multiplied by every frame).", 2
 
-    ParticleAlpha = 39, NormalizedVec2(vec_range=2.0, allow_negative=False, value=(1.0, 1.0)), \
+    ParticleAlpha = 39, TypeHolder(ValueType.NormVec2, vec_range=2.0, allow_negative=False, value=(1.0, 1.0)), \
     "G = Start alpha, B = End alpha", 2
 
-    ParticleScale = 40, NormalizedVec2(vec_range=2.0, allow_negative=False, value=(1.0, 0.0)), \
+    ParticleScale = 40, TypeHolder(ValueType.NormVec2, vec_range=2.0, allow_negative=False, value=(1.0, 0.0)), \
     "G = Start scale, B = End scale", 2
 
-    ParticleRotation = 41, NormalizedVec2(vec_range=36.0, allow_negative=False, value=(0.0, 0.0)), \
+    ParticleRotation = 41, TypeHolder(ValueType.NormVec2, vec_range=36.0, allow_negative=False, value=(0.0, 0.0)),\
     "G = Start rotation, B = End rotation", 2
 
-    ParticleOffset = 42, Vec2(vec_range=16), \
+    ParticleOffset = 42, TypeHolder(ValueType.Vec2, vec_range=16), \
     "Additional X Y offset of particle.", 2
 
-    ParticleBackground = 43, Bool(), \
+    ParticleBackground = 43, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, particles will be rendered behind the duck.", 2
 
-    ParticleAnchor = 44, Bool(), \
+    ParticleAnchor = 44, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, particles will stay anchored around the hat position when it's moving.", 2
 
-    ParticleAnimated = 45, Bool(), \
+    ParticleAnimated = 45, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, particles will animate through their frames. Otherwise, a frame will be picked " \
     "randomly.", 2
 
-    ParticleAnimationLoop = 46, Bool(), \
+    ParticleAnimationLoop = 46, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the particle animation will loop.", 2
 
-    ParticleAnimationRandomFrame = 47, Bool(), \
+    ParticleAnimationRandomFrame = 47, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the particle animation will start on a random frame.", 2
 
-    ParticleAnimationSpeed = 48, Float(value=0.1), \
+    ParticleAnimationSpeed = 48, TypeHolder(ValueType.Float, value=0.1), \
     "How quickly the particle animates.", 2
 
     # Strange
-    WetLips = 70, Bool(), \
+    WetLips = 70, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the hat will have 'wet lips'.", 3
 
-    MechanicalLips = 71, Bool(), \
+    MechanicalLips = 71, TypeHolder(ValueType.Bool), \
     "If this metapixel exists, the hat will have 'mechanical lips'.", 3
 
     # Special
-    RandomizeParameterX = 100, Randomize(), \
-    "If present, the previously defined metapixel value will have a random number between G and B applied to its X " \
+    RandomizeParameterX = 100, TypeHolder(ValueType.Randomize), \
+    "If present, the previously defined metapixel value will have a random number between G and B applied to its A " \
     "value each time it's used. This will generally only work with particles..", 4
 
-    RandomizeParameterY = 101, Randomize(), \
-    "If present, the previously defined metapixel value will have a random number between G and B applied to its X " \
+    RandomizeParameterY = 101, TypeHolder(ValueType.Randomize), \
+    "If present, the previously defined metapixel value will have a random number between G and B applied to its B " \
     "value each time it's used. This will generally only work with particles..", 4
 
-    RandomizeParameter = 102, Randomize(), \
+    RandomizeParameter = 102, TypeHolder(ValueType.Randomize), \
     "If present, the previously defined metapixel value will have a random number between G and B applied to its " \
-    "X and Y values each time it's used. This will generally only work with particles..", 4
+    "A and B values each time it's used. This will generally only work with particles..", 4
 
 
 class MetaPixel:
@@ -419,8 +451,8 @@ class MetaPixel:
         self.type = meta_pixel_type
 
         value = meta_pixel_type.value[1]
-        assert isinstance(value, MetaPixelValue)
-        self.value = value
+        assert isinstance(value, TypeHolder)
+        self.value = value.generate()
 
         self.value.set_colors(g, b)
 
@@ -462,7 +494,8 @@ class MetaPixelGui:
         self.G.edit_modified(False)
         self.B.edit_modified(False)
 
-        self.ValueType = tk.Button(frame, text=pixel.type.value[1].type.name, bg=pixel.type.value[1].type.value[1])
+        self.ValueType = tk.Button(frame, text=pixel.type.value[1].type.name,
+                                   bg=TypeHolder.COLORS.get(pixel.type.value[1].type.value))
         self.ValueType["command"] = self.click_type
         self.ValueType.grid(column=4, row=row, sticky=tk.NSEW)
 
@@ -538,7 +571,7 @@ class MetaPixelGui:
         self.pixel.value.set_colors(g, b)
         values = self.pixel.value.get_values()
         if 0 < len(values):
-            value = float("{:.2f}".format(values[0]))
+            value = float("{:.3f}".format(values[0]))
             self.valueA.delete('1.0', tk.END)
             self.valueA.insert(tk.INSERT, int(values[0]) if int(values[0]) == value else value)
             self.valueA.edit_modified(False)
@@ -553,7 +586,7 @@ class MetaPixelGui:
         self.label["text"] = self.pixel.type.value[2]
 
     def click_type(self):
-        self.label["text"] = self.pixel.type.value[1].get_help()
+        self.label["text"] = self.pixel.value.get_help()
 
     def click_x(self):
         self.editor.remove_meta_pixel(self.pixel)
@@ -601,7 +634,7 @@ class Editor:
         self.image = None
 
         self.meta_pixel_keys = []
-        self.meta_pixels = {}
+        self.meta_pixels = []
 
         self.pixels = None
         # self.image.save("pixel_grid.png")
@@ -685,7 +718,7 @@ class Editor:
         image_file = asksaveasfile(title="Select file to save as", filetypes=[('PNG Files', '*.png')])
         if image_file is None: return
         for p in range(len(self.meta_pixels)):
-            meta_pixel = self.meta_pixels[self.meta_pixel_keys[p]]
+            meta_pixel = self.meta_pixels[p]
             assert isinstance(meta_pixel, MetaPixel)
             self.pixels[96, p] = meta_pixel.get_rgba()
         self.image.save(image_file.name)
@@ -710,13 +743,15 @@ class Editor:
                                                                   " (97, 56) pixels in size")
             return
 
-        if image.mode != "RGBA":
-            showinfo(title="Can't Open "+image_file.name, message="Couldn't open file because it's color mode is "
-                                                                  "wrong")
+        try:
+            image = image.convert('RGBA')
+        except ValueError:
+            showinfo(title="Can't Open " + image_file.name, message="Couldn't open file because it's color mode is "
+                                                                    "wrong")
             return
 
         self.meta_pixel_keys = []
-        self.meta_pixels = {}
+        self.meta_pixels = []
         self.image = image
 
         image_file.close()
@@ -747,7 +782,7 @@ class Editor:
             def click(self):
                 meta_pixel = MetaPixel(self.meta_pixel_type, 0, 0)
                 self.editor.meta_pixel_keys.append(self.meta_pixel_type)
-                self.editor.meta_pixels[self.meta_pixel_type] = meta_pixel
+                self.editor.meta_pixels.append(meta_pixel)
                 self.editor.gen_meta_pixels()
                 self.editor.add_open = False
                 self.root.quit()
@@ -755,7 +790,7 @@ class Editor:
 
         root.resizable(width=False, height=False)
         for meta_pixel_type in MetaPixel.TYPES.values():
-            if self.meta_pixel_keys.__contains__(meta_pixel_type): continue
+            if self.meta_pixel_keys.__contains__(meta_pixel_type) and meta_pixel_type.value[0] < 100: continue
             Option(meta_pixel_type, self, root)
 
         self.add_open = True
@@ -769,30 +804,30 @@ class Editor:
             r, g, b, a = self.pixels[96, p]
 
             meta_pixel_type = MetaPixel.TYPES.get(r)
-            if meta_pixel_type is not None and not self.meta_pixel_keys.__contains__(meta_pixel_type):
-                self.meta_pixel_keys.append(meta_pixel_type)
-                self.meta_pixels[meta_pixel_type] = MetaPixel(meta_pixel_type, g, b)
-            else: self.pixels[96, p] = 0, 0, 0, 0
+            if meta_pixel_type is not None:
+                if not self.meta_pixel_keys.__contains__(meta_pixel_type) or 100 <= meta_pixel_type.value[0]:
+                    self.meta_pixel_keys.append(meta_pixel_type)
+                    self.meta_pixels.append(MetaPixel(meta_pixel_type, g, b))
+            self.pixels[96, p] = 0, 0, 0, 0
 
     def add_meta_pixel(self, meta_pixel: MetaPixel):
         self.metas.append(MetaPixelGui(meta_pixel, len(self.metas)+1, self.frame1, self.label, self))
 
     def gen_meta_pixels(self):
-        for meta in self.metas:
-            meta.remove()
+        for meta in self.metas: meta.remove()
         self.metas = []
-        for item in self.meta_pixels.values(): self.add_meta_pixel(item)
+        for item in self.meta_pixels: self.add_meta_pixel(item)
 
     def remove_meta_pixel(self, meta_pixel: MetaPixel):
-        if self.meta_pixels.__contains__(meta_pixel.type):
-            del self.meta_pixels[meta_pixel.type]
+        if self.meta_pixels.__contains__(meta_pixel):
+            self.meta_pixels.remove(meta_pixel)
             self.meta_pixel_keys.remove(meta_pixel.type)
             self.gen_meta_pixels()
 
     def move_meta_pixel_up(self, meta_pixel: MetaPixel):
-        if self.meta_pixels.__contains__(meta_pixel.type):
+        if self.meta_pixels.__contains__(meta_pixel):
             for i in range(len(self.meta_pixels)):
-                if self.meta_pixel_keys[i] == meta_pixel.type:
+                if self.meta_pixels[i] == meta_pixel:
                     u = i-1 if 0 < i else len(self.meta_pixel_keys)-1
                     move_down = self.meta_pixel_keys[u]
                     self.meta_pixel_keys[i] = move_down
@@ -801,31 +836,31 @@ class Editor:
                     self.metas[i].remove()
                     self.metas[u].remove()
 
-                    new_meta_pixels = {}
-                    for key in self.meta_pixel_keys: new_meta_pixels[key] = self.meta_pixels[key]
-                    self.meta_pixels = new_meta_pixels
+                    move_down = self.meta_pixels[u]
+                    self.meta_pixels[u] = meta_pixel
+                    self.meta_pixels[i] = move_down
 
-                    self.metas[i] = MetaPixelGui(self.meta_pixels[move_down], i+1, self.frame1, self.label, self)
+                    self.metas[i] = MetaPixelGui(move_down, i+1, self.frame1, self.label, self)
                     self.metas[u] = MetaPixelGui(meta_pixel, u+1, self.frame1, self.label, self)
                     return
 
     def move_meta_pixel_down(self, meta_pixel: MetaPixel):
-        if self.meta_pixels.__contains__(meta_pixel.type):
+        if self.meta_pixels.__contains__(meta_pixel):
             for i in range(len(self.meta_pixels)):
-                if self.meta_pixel_keys[i] == meta_pixel.type:
+                if self.meta_pixels[i] == meta_pixel:
                     u = i+1 if i < len(self.meta_pixel_keys) - 1 else 0
-                    move_down = self.meta_pixel_keys[u]
-                    self.meta_pixel_keys[i] = move_down
+                    move_up = self.meta_pixel_keys[u]
                     self.meta_pixel_keys[u] = meta_pixel.type
+                    self.meta_pixel_keys[i] = move_up
 
                     self.metas[i].remove()
                     self.metas[u].remove()
 
-                    new_meta_pixels = {}
-                    for key in self.meta_pixel_keys: new_meta_pixels[key] = self.meta_pixels[key]
-                    self.meta_pixels = new_meta_pixels
+                    move_up = self.meta_pixels[u]
+                    self.meta_pixels[u] = meta_pixel
+                    self.meta_pixels[i] = move_up
 
-                    self.metas[i] = MetaPixelGui(self.meta_pixels[move_down], i+1, self.frame1, self.label, self)
+                    self.metas[i] = MetaPixelGui(move_up, i+1, self.frame1, self.label, self)
                     self.metas[u] = MetaPixelGui(meta_pixel, u+1, self.frame1, self.label, self)
                     return
 
